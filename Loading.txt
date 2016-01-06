@@ -1,0 +1,46 @@
+Pintos Loader and basic kernel initialization:
+
+
+____________________
+1. The Loader
+____________________
+
+The first part of Pintos that runs is the loader, in "threads/loader.S". The PC BIOS loads the loader into memory. The loader, in turn, is responsible for finding the kernel on disk, loading it into memory, and then jumping to its start. It's not important to understand exactly how the loader works, but if you're interested, read on.
+
+The loader's first job, then, is to find the kernel by reading the partition table on each hard disk, looking for a bootable partition of the type used for a Pintos kernel. 
+
+The loader's final job is to extract the entry point from the loaded kernel image and transfer control to it.
+
+~~~~~~~~~~~~~~~~~~
+-> Low-Level Kernel Initialization:
+
+The loader's last action is to transfer control to the kernel's entry point, which is start() in "threads/start.S".
+The final step is to call main(). 
+
+~~~~~~~~~~~~~~~~~~
+-> High-Level Kernel Initialization:
+
+main() starts  //main function located in src/threads/init.c
+
+The first step in main() is to call bss_init().
+
+Next, main() calls read_command_line()
+
+thread_init() initializes the thread system.
+ (It is called so early in initialization because a valid thread structure is a prerequisite for acquiring a lock, and lock acquisition in turn is important to other Pintos subsystems)
+
+The next set of calls initializes the interrupt system. intr_init() sets up the CPU's interrupt descriptor table (IDT) to ready it for interrupt handling, then timer_init() and kbd_init() prepare for handling timer interrupts and keyboard interrupts, respectively.
+
+Now that interrupts are set up, we can start the scheduler with thread_start(), which creates the idle thread and enables interrupts. With interrupts enabled, interrupt-driven serial port I/O becomes possible, so we use serial_init_queue() to switch to that mode. Finally, timer_calibrate() calibrates the timer for accurate short delays. 
+
+Boot is complete, so we print a message.
+
+*** Function run_actions() now parses and executes actions specified on the kernel command line, such as run to run a test.
+
+/* Run actions specified on kernel command line. */
+
+run_actions (argv);
+~~~~~~~~~~~~~~~~~~
+
+
+
